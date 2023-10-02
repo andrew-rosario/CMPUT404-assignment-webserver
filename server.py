@@ -28,16 +28,23 @@ CONTENT_TYPE_HEADER = 'Content-Type: '
 HTML_CONTENT_TYPE = 'text/html; charset=utf-8\n'
 CSS_CONTENT_TYPE = 'text/css\n'
 DEBUG_RESPONSE = OK_RESPONSE
+BASE_URL = "http://127.0.0.1:8080"
 
 
 def parse_web_file(file_path):
+    file_name = os.path.split(file_path)[1]
+    print(os.path.splitext(file_path))
     try:
-        if not os.path.isfile(file_path) or os.path.splitext(file_path)[1] != ".html" or \
-                os.path.splitext(file_path)[1] != ".css":
+        if not (os.path.isfile(file_path)):
+            raise Exception("Does not exist.")
+        elif (os.path.splitext(file_name)[1] != ".html") and (os.path.splitext(file_name)[1] != ".css"):
             raise NotAFileException
     except NotAFileException:
         print("Not a HTML/CSS file.")
+    except Exception as e:
+        print(f"Exception as: {e}")
 
+    print("Yay! This is a HTML/CSS file.")
     with open(file_path, 'r') as file:
         data_to_send = file.read()
     return data_to_send
@@ -60,6 +67,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
         http_request = request_headers[0].split(" ")
         if http_request[0] == "GET":
             path_to_thing = 'www' + http_request[1]
+            if os.path.isdir(path_to_thing):
+                path_to_thing += "/"
             response = self.handle_file_request(path_to_thing)
             print(response)
         else:
@@ -77,7 +86,18 @@ class MyWebServer(socketserver.BaseRequestHandler):
         print(f"Path: {path_to_file}")
         file_path_components = os.path.split(path_to_file)
         print(f"File component index 1: {file_path_components[1]}")
-        if not file_path_components[1]:  # simply going into a directory
+        split_path = path_to_file.split("/")
+
+        #directory_exists = os.path.isdir(path_to_file)
+        #print(f"Directory/file existence: {directory_exists}")
+        if split_path[1] == "..": # do not allow paths that go up two directories; this is forbidden.
+            request_to_send.append(NOT_EXIST_RESPONSE)
+            return ''.join(request_to_send)
+
+        #if os.path.isdir(path_to_file):
+            #path_to_file += "/"
+
+        if not os.path.isfile(path_to_file) and os.path.isdir(path_to_file):  # simply going into a directory
             index_path = os.path.join(file_path_components[0], "index.html")
             index_exists = os.path.isfile(index_path)
             print(f"Path joined: {index_path}")
@@ -88,7 +108,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
             else:
                 request_to_send.append(NOT_EXIST_RESPONSE)
             request_to_send.append(parse_web_file(index_path))
-        elif os.path.exists(path_to_file):
+        elif os.path.isfile(path_to_file):
             request_to_send.append(OK_RESPONSE)
             if os.path.splitext(file_path_components[1])[1] == ".html":
                 request_to_send.append(CONTENT_TYPE_HEADER + HTML_CONTENT_TYPE + "\n")
