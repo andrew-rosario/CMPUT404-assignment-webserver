@@ -88,16 +88,16 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 request_to_send.append(CONTENT_TYPE_HEADER + HTML_CONTENT_TYPE + "\n")
             else:
                 request_to_send.append(NOT_EXIST_RESPONSE)
-            request_to_send.append(self.parse_web_file(index_path))
+            request_to_send.append(parse_web_file(index_path))
         elif os.path.exists(path_to_file):
             request_to_send.append(OK_RESPONSE)
             if os.path.splitext(file_path_components[1])[1] == ".html":
                 request_to_send.append(CONTENT_TYPE_HEADER + HTML_CONTENT_TYPE + "\n")
-                request_to_send.append(self.parse_web_file(path_to_file))
+                request_to_send.append(parse_web_file(path_to_file))
                 # request_to_send.append(self.add_css_files(path_to_file))
             elif os.path.splitext(file_path_components[1])[1] == ".css":
                 request_to_send.append(CONTENT_TYPE_HEADER + CSS_CONTENT_TYPE + "\n")
-                request_to_send.append(self.parse_web_file(path_to_file))
+                request_to_send.append(parse_web_file(path_to_file))
         else:
             request_to_send.append(NOT_EXIST_RESPONSE)
         return ''.join(request_to_send)
