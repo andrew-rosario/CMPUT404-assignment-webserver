@@ -78,7 +78,6 @@ class MyWebServer(socketserver.BaseRequestHandler):
         file_path_components = os.path.split(path_to_file)
         print(f"File component index 1: {file_path_components[1]}")
         if not file_path_components[1]:  # simply going into a directory
-            print(f"Directory. Does index exist")
             index_path = os.path.join(file_path_components[0], "index.html")
             index_exists = os.path.isfile(index_path)
             print(f"Path joined: {index_path}")
