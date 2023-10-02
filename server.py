@@ -67,9 +67,10 @@ class MyWebServer(socketserver.BaseRequestHandler):
         http_request = request_headers[0].split(" ")
         if http_request[0] == "GET":
             path_to_thing = 'www' + http_request[1]
-            if os.path.isdir(path_to_thing):
-                path_to_thing += "/"
-            response = self.handle_file_request(path_to_thing)
+            if os.path.isdir(path_to_thing) and path_to_thing[-1] != "/":
+                response = "HTTP/1.1 301 Moved Permanently\nDirection: " + path_to_thing + "/"
+            else:
+                response = self.handle_file_request(path_to_thing)
             print(response)
         else:
             response = "HTTP/1.1 405 Method Not Allowed"
@@ -97,7 +98,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
         #if os.path.isdir(path_to_file):
             #path_to_file += "/"
 
-        if not os.path.isfile(path_to_file) and os.path.isdir(path_to_file):  # simply going into a directory
+        if not file_path_components[1]:  # simply going into a directory
             index_path = os.path.join(file_path_components[0], "index.html")
             index_exists = os.path.isfile(index_path)
             print(f"Path joined: {index_path}")
