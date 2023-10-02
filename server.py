@@ -1,29 +1,24 @@
-#  coding: utf-8 
+# coding: utf-8
 import socketserver, os
 
-# Copyright 2013 Abram Hindle, Eddie Antonio Santos
-# 
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-# 
-#     http://www.apache.org/licenses/LICENSE-2.0
-# 
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Copyright 2013-2023 Abram Hindle, Eddie Antonio Santos, Jackson Z Chang, Mandy Meindersma, Andrew Rosario
 #
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, solely version 3 of the License.
 #
-# Furthermore it is derived from the Python documentation examples thus
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program. If not,
+# see <https://www.gnu.org/licenses/>.
+#
+# Furthermore, it is derived from the Python documentation examples thus
 # some of the code is Copyright © 2001-2013 Python Software
-# Foundation; All Righ        self.data
-#
+# Foundation; All Rights Reserved
+
 # http://docs.python.org/2/library/socketserver.html
 #
 # run: python freetests.py
-
 # try: curl -v -X GET http://127.0.0.1:8080/
 
 ROOT_FOLDER = 'www'
@@ -33,6 +28,19 @@ CONTENT_TYPE_HEADER = 'Content-Type: '
 HTML_CONTENT_TYPE = 'text/html; charset=utf-8\n'
 CSS_CONTENT_TYPE = 'text/css\n'
 DEBUG_RESPONSE = OK_RESPONSE
+
+
+def parse_web_file(file_path):
+    try:
+        if not os.path.isfile(file_path) or os.path.splitext(file_path)[1] != ".html" or \
+                os.path.splitext(file_path)[1] != ".css":
+            raise NotAFileException
+    except NotAFileException:
+        print("Not a HTML/CSS file.")
+
+    with open(file_path, 'r') as file:
+        data_to_send = file.read()
+    return data_to_send
 
 
 class NotAFileException(Exception):
@@ -50,14 +58,13 @@ class MyWebServer(socketserver.BaseRequestHandler):
         request_headers = self.data.decode().split("\r\n")
         print(request_headers)
         http_request = request_headers[0].split(" ")
-        response = DEBUG_RESPONSE
         if http_request[0] == "GET":
             path_to_thing = 'www' + http_request[1]
             response = self.handle_file_request(path_to_thing)
             print(response)
         else:
             response = "HTTP/1.1 405 Method Not Allowed"
-        #response.rstrip('\n')
+        # response.rstrip('\n')
         # with open(BASE_URL,'r') as html_page:
         #     html_content = html_page.read()
         # html_content = html_content.encode('ascii')
@@ -87,7 +94,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
             if os.path.splitext(file_path_components[1])[1] == ".html":
                 request_to_send.append(CONTENT_TYPE_HEADER + HTML_CONTENT_TYPE + "\n")
                 request_to_send.append(self.parse_web_file(path_to_file))
-                #request_to_send.append(self.add_css_files(path_to_file))
+                # request_to_send.append(self.add_css_files(path_to_file))
             elif os.path.splitext(file_path_components[1])[1] == ".css":
                 request_to_send.append(CONTENT_TYPE_HEADER + CSS_CONTENT_TYPE + "\n")
                 request_to_send.append(self.parse_web_file(path_to_file))
@@ -95,16 +102,6 @@ class MyWebServer(socketserver.BaseRequestHandler):
             request_to_send.append(NOT_EXIST_RESPONSE)
         return ''.join(request_to_send)
 
-    def parse_web_file(self, file_path):
-        try:
-            if not os.path.isfile(file_path) or os.path.splitext(file_path)[1] != ".html" or os.path.splitext(file_path)[1] != ".css":
-                raise NotAFileException
-        except NotAFileException:
-            print("Not a HTML/CSS file.")
-
-        with open(file_path, 'r') as file:
-            file_to_send = file.read()
-        return file_to_send
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
